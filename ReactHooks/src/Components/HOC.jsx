@@ -26,17 +26,6 @@ function HOC() {
     </>
   );
 }
-const spider = ({ loading }) => (
-  <div>{loading ? <p>Loading....</p> : <p>Data Loaded successfully</p>}</div>
-);
 
-const Monkey = withLoading(spider);
-function Rama() {
-  return (
-    <>
-      <Monkey />
-    </>
-  );
-}
 
 export default HOC;
