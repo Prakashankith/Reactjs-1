@@ -7,10 +7,9 @@ import ProductCard from "./ProductCard";
 const fetchProducts = async ({ queryKey }) => {
   const [_, page, categoryFilter] = queryKey;
 
-  // Construct the URL with category filter
   const url = categoryFilter
-    ? `https://fakestoreapi.com/products?limit=10&page=${page}&category=${categoryFilter}`
-    : `https://fakestoreapi.com/products?limit=10&page=${page}`;
+    ? `https://fakestoreapi.com/products?limit=0&page=${page}&category=${categoryFilter}`
+    : `https://fakestoreapi.com/products?limit=0&page=${page}`;
 
   const response = await axios.get(url);
   return response.data;
@@ -20,11 +19,12 @@ const ProductList = () => {
   const [page, setPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState(""); // Default category is empty (all categories)
   const [sortOrder, setSortOrder] = useState("asc"); // Default to ascending sort by price
+  const [cart, setCart] = useState([]); // Cart state to manage added items
 
   // React Query hook to fetch products based on filters and pagination
   const { data, isLoading, isError, error, isFetching } = useQuery({
     queryKey: ["products", page, categoryFilter], // Adding categoryFilter to the query key to trigger refetch
-    queryFn: fetchProducts, // Function to fetch products
+    queryFn: fetchProducts,
     keepPreviousData: true, // Keep previous data while new data is loading
   });
 
@@ -71,6 +71,24 @@ const ProductList = () => {
     setPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
+  const addToCart = (product) => {
+    // Check if product is already in the cart
+    const existingProduct = cart.find((item) => item.id === product.id);
+    if (existingProduct) {
+      // If the product is already in the cart, increase the quantity
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
+    } else {
+      // If the product is not in the cart, add it
+      setCart((prevCart) => [...prevCart, { ...product, quantity: 1 }]);
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -84,15 +102,17 @@ const ProductList = () => {
   const sortedData = sortProducts(filteredData);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-4xl font-bold text-center">Product Listing</h1>
+    <div className="container mx-auto p-6">
+      <h1 className="text-4xl font-bold text-center mb-10 text-gray-800">
+        Product Listing
+      </h1>
 
       {/* Category Filter */}
-      <div className="mt-4">
+      <div className="mt-4 text-center">
         <select
           onChange={handleCategoryChange}
           value={categoryFilter || "All Categories"}
-          className="border p-2"
+          className="border border-gray-300 p-3 rounded-lg shadow-md w-full sm:w-auto"
         >
           {categories.map((category, index) => (
             <option
@@ -106,11 +126,11 @@ const ProductList = () => {
       </div>
 
       {/* Sort by Price or Rating */}
-      <div className="mt-4">
+      <div className="mt-4 text-center">
         <select
           onChange={handleSortChange}
           value={sortOrder}
-          className="border p-2"
+          className="border border-gray-300 p-3 rounded-lg shadow-md w-full sm:w-auto"
         >
           <option value="asc">Sort by Price (Low to High)</option>
           <option value="desc">Sort by Price (High to Low)</option>
@@ -119,37 +139,41 @@ const ProductList = () => {
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8 mt-8">
         {sortedData.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            addToCart={addToCart}
+          />
         ))}
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-6">
+      <div className="flex justify-center mt-8">
         <button
           onClick={handlePrevPage}
           disabled={page === 1}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md mx-2"
+          className="bg-blue-600 text-white px-5 py-3 rounded-md mx-2 disabled:opacity-50"
         >
           Previous
         </button>
-        <span className="mx-4">{page}</span>
+        <span className="mx-4 text-lg font-semibold text-gray-800">{page}</span>
         <button
           onClick={handleNextPage}
           disabled={isFetching}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md mx-2"
+          className="bg-blue-600 text-white px-5 py-3 rounded-md mx-2 disabled:opacity-50"
         >
           Next
         </button>
       </div>
 
-      {/* Load More Button (Alternative Pagination) */}
-      <div className="text-center mt-6">
+      {/* Load More Button */}
+      <div className="text-center mt-8">
         <button
           onClick={handleNextPage}
           disabled={isFetching}
-          className="bg-blue-500 text-white px-6 py-2 rounded-md"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md disabled:opacity-50"
         >
           {isFetching ? "Loading more..." : "Load More"}
         </button>

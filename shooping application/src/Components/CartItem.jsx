@@ -1,48 +1,39 @@
 import React from "react";
 
-const CartItem = ({ item, updateCart }) => {
-  const { id, title, price, quantity } = item;
-
+const CartItem = ({ item, updateItemQuantity, removeItem }) => {
   const handleQuantityChange = (e) => {
-    const updatedQuantity = parseInt(e.target.value, 10);
-    const updatedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const updatedItem = updatedCart.find((product) => product.id === id);
-    updatedItem.quantity = updatedQuantity;
-    updateCart(updatedCart);
-  };
-
-  const handleRemove = () => {
-    const updatedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const filteredCart = updatedCart.filter((product) => product.id !== id);
-    updateCart(filteredCart);
+    const newQuantity = parseInt(e.target.value, 10);
+    if (newQuantity > 0) {
+      updateItemQuantity(item.id, newQuantity);
+    }
   };
 
   return (
-    <div className="border p-4 mt-4 rounded-lg flex items-center">
-      <img
-        src={item.image}
-        alt={title}
-        className="w-20 h-20 object-cover rounded-md"
-      />
-      <div className="ml-4 flex-1">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        <p className="text-lg text-gray-500">Price: ${price}</p>
-        <input
-          type="number"
-          value={quantity}
-          min="1"
-          onChange={handleQuantityChange}
-          className="border p-2 mt-2 w-20"
-        />
+    <div className="cart-item p-4 border-b">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-bold">{item.title}</h3>
+          <p className="text-gray-600">Price: ${item.price}</p>
+        </div>
+        <div className="flex items-center">
+          <input
+            type="number"
+            value={item.quantity}
+            onChange={handleQuantityChange}
+            className="w-16 text-center border p-1"
+            min="1"
+          />
+          <button
+            onClick={() => removeItem(item.id)}
+            className="ml-4 text-red-500 hover:text-red-700"
+          >
+            Remove
+          </button>
+        </div>
       </div>
-      <div className="ml-4">
-        <button
-          onClick={handleRemove}
-          className="bg-red-500 text-white p-2 rounded-lg"
-        >
-          Remove
-        </button>
-      </div>
+      <p className="mt-2">
+        Subtotal: ${(item.price * item.quantity).toFixed(2)}
+      </p>
     </div>
   );
 };
